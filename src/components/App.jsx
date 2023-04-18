@@ -1,16 +1,94 @@
-export const App = () => {
-  return (
-    <div
-      style={{
-        height: '100vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        fontSize: 40,
-        color: '#010101'
-      }}
-    >
-      React homework template
-    </div>
-  );
-};
+import { nanoid } from 'nanoid';
+
+import { Component } from 'react';
+import { Wrapper } from './App.styled';
+import { ContactForm } from './ContactForm/ContactForm';
+import { ContactList } from './ContactList/ContactList';
+import { Filter } from './Filter/Filter';
+
+export class App extends Component {
+  state = {
+    contacts: [],
+    filter: '',
+  };
+
+  componentDidMount() {
+    const getStorageContacts = localStorage.getItem('contacts');
+    const storageContacts = JSON.parse(getStorageContacts);
+    if (storageContacts)
+      this.setState({
+        contacts: storageContacts,
+      });
+  }
+
+  componentDidUpdate(prevState) {
+    if (prevState.contacts !== this.state.contacts) {
+      const saveContacts = JSON.stringify(this.state.contacts);
+      localStorage.setItem('contacts', saveContacts);
+    }
+  }
+
+
+  addContact = ({ name, number }) => {
+    const contact = {
+      id: nanoid(),
+      name,
+      number,   
+    };
+
+    //let updatedContacts;
+    //addContact = newContact => {
+      const { contacts } =this.state;
+    const newContactName = contacts.some(
+      contact => contact.name.toLowerCase() === name.toLowerCase() || 
+      contact.number === number
+    );
+
+if  (newContactName) {
+    alert(`This name is already in contacts.`);
+    return;
+}
+    //}
+
+  this.setState(prevState => {
+    return { contacts: [contact, ...prevState.contacts] };
+  });
+  };
+
+deleteContact = id => {
+    this.setState(prevState => ({
+      contacts: prevState.contacts.filter(contact => contact.id !== id),
+    }));
+  };
+
+  changeFilter = e => {
+    this.setState({ filter: e.currentTarget.value});
+  };
+
+  searchName = () => {
+    const lowerCase = this.state.filter.toLowerCase();
+    return this.state.contacts.filter(contact => 
+      contact.name.toLowerCase().includes(lowerCase)
+      );
+    };
+
+  // Delete contact
+
+
+
+  render() {
+    const {filter, contacts} = this.state;
+
+    return (
+      <Wrapper>
+        <h1>Phonebook</h1>
+        <ContactForm onClickSubmit={this.addContact} arr={contacts} />
+        <h2>Contacts</h2>
+        <Filter onChangeFilter={this.changeFilter} valueFilter={filter}/>
+        {contacts.length > 0 && (
+        <ContactList onClickDelete={this.deleteContact} contacts={this.searchName()}/>
+        )}
+      </Wrapper>
+    );
+  }
+}
