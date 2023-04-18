@@ -1,36 +1,51 @@
 import { nanoid } from 'nanoid';
 
-import { Component } from 'react';
+//import { Component } from 'react';
+import { useEffect, useState } from 'react';
+
 import { Wrapper } from './App.styled';
 import { ContactForm } from './ContactForm/ContactForm';
 import { ContactList } from './ContactList/ContactList';
 import { Filter } from './Filter/Filter';
 
-export class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+//export class App extends Component {
+  //state = {
+    //contacts: [],
+    //filter: '',
+  //};
 
-  componentDidMount() {
-    const getStorageContacts = localStorage.getItem('contacts');
-    const storageContacts = JSON.parse(getStorageContacts);
-    if (storageContacts)
-      this.setState({
-        contacts: storageContacts,
-      });
-  }
+  export const App = () => {
+    const [contacts, setContacts] = useState(() => {
+      return JSON.parse(localStorage.getItem('contacts')) ?? [];
+    });
+    const [filter, setFilter] = useState('');
 
-  componentDidUpdate(prevState) {
-    if (prevState.contacts !== this.state.contacts) {
-      const saveContacts = JSON.stringify(this.state.contacts);
-      localStorage.setItem('contacts', saveContacts);
-    }
-  }
+  //componentDidMount() {
+    //const getStorageContacts = localStorage.getItem('contacts');
+    //const storageContacts = JSON.parse(getStorageContacts);
+    //if (storageContacts)
+     // this.setState({
+       // contacts: storageContacts,
+     // });
+  //}
 
+  //componentDidUpdate(prevState) {
+    //if (prevState.contacts !== this.state.contacts) {
+     //const saveContacts = JSON.stringify(this.state.contacts);
+     // localStorage.setItem('contacts', saveContacts);
+    //}
+  //}
 
-  addContact = ({ name, number }) => {
-    const contact = {
+  useEffect(() => {
+    const saveContacts = JSON.stringify(contacts);
+    localStorage.setItem('contacts', saveContacts);
+  }, [contacts]);
+
+  //Прибираємо this, ми позакласом, тому методів НЕМАЄ!, тому або function or const
+  
+
+  const addContact = (name, number) => {
+    const contactNew = {
       id: nanoid(),
       name,
       number,   
@@ -38,57 +53,47 @@ export class App extends Component {
 
     //let updatedContacts;
     //addContact = newContact => {
-      const { contacts } =this.state;
-    const newContactName = contacts.some(
-      contact => contact.name.toLowerCase() === name.toLowerCase() || 
-      contact.number === number
+      //const { contacts } =this.state;
+    const newContactName = contacts.find(
+      contact => contact.name.toLowerCase() === contactNew.name.toLowerCase()  
     );
 
 if  (newContactName) {
     alert(`This name is already in contacts.`);
     return;
+} else {
+  setContacts(prev => [...prev, contactNew]);
 }
+};
     //}
 
-  this.setState(prevState => {
-    return { contacts: [contact, ...prevState.contacts] };
-  });
+  const changeFilter = e => {
+    const { value } = e.target;
+    setFilter(value);
   };
 
-deleteContact = id => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== id),
-    }));
-  };
-
-  changeFilter = e => {
-    this.setState({ filter: e.currentTarget.value});
-  };
-
-  searchName = () => {
-    const lowerCase = this.state.filter.toLowerCase();
-    return this.state.contacts.filter(contact => 
+  const searchName = () => {
+    const lowerCase = filter.toLowerCase();
+    return contacts.filter(contact => 
       contact.name.toLowerCase().includes(lowerCase)
       );
     };
 
   // Delete contact
 
-
-
-  render() {
-    const {filter, contacts} = this.state;
+  const deleteContact = id => {
+      setContacts ( prev => prev.filter(contact => contact.id !== id));
+  };
 
     return (
       <Wrapper>
         <h1>Phonebook</h1>
-        <ContactForm onClickSubmit={this.addContact} arr={contacts} />
+        <ContactForm onClickSubmit={addContact}/>
         <h2>Contacts</h2>
-        <Filter onChangeFilter={this.changeFilter} valueFilter={filter}/>
+        <Filter onChangeFilter={changeFilter} valueFilter={filter}/>
         {contacts.length > 0 && (
-        <ContactList onClickDelete={this.deleteContact} contacts={this.searchName()}/>
+        <ContactList onClickDelete={deleteContact} contacts={searchName()}/>
         )}
       </Wrapper>
     );
-  }
-}
+        };
